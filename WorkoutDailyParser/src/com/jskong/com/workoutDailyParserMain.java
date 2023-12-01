@@ -41,15 +41,24 @@ public class workoutDailyParserMain {
 	 * 
 	 * 
 	 * 
-	 * 예외상황
+	 * [ Caution ]
+	 * - 공백으로 횟수(reps) 구분 이외에 다른 경우에도 공백 존재 가능
+	 * - ex) 55 - 12 12 10 << '55'와 '-' 사이의 공백
+	 * - 따라서 공백 앞 뒤의 인접자가 숫자인지 아닌지 판별하는 로직 필요
+	 * - 
+	 * - 무게(weight)에 소숫점이 존재 가능
+	 * - work_index, set_index는 1부터 시작, 1씩 증가
+	 * - 
+	 * - 
+	 * 
 	 * */
 	public static String parseWorkoutJson(String inputData) {
-
+		
 		return "";
 	}
 	
 	public static String parseWorkoutData(String inputData) {
-
+		
 		return "";
 	}
 
