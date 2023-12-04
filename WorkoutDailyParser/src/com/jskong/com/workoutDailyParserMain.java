@@ -3,7 +3,7 @@ package com.jskong.com;
 public class workoutDailyParserMain {
 
 	public static void main(String[] args) {
-		System.out.println("hi");
+		System.out.println("workout");
 	}
 	
 	/* [ Delimiter ]	[ Description ]
@@ -24,7 +24,7 @@ public class workoutDailyParserMain {
 	 * 
 	 * 
 	 * 
-	 * [ Json Structure]
+	 * < Json Structure >
 	 * ├ date (DATE)
 	 * └ work (ARRAY)
 	 *   ├ work_index (INTEGER)
@@ -41,7 +41,7 @@ public class workoutDailyParserMain {
 	 * 
 	 * 
 	 * 
-	 * [ Caution ]
+	 * < Caution >
 	 * - 공백으로 횟수(reps) 구분 이외에 다른 경우에도 공백 존재 가능
 	 * - ex) 55 - 12 12 10 << '55'와 '-' 사이의 공백
 	 * - 따라서 공백 앞 뒤의 인접자가 숫자인지 아닌지 판별하는 로직 필요
@@ -52,12 +52,12 @@ public class workoutDailyParserMain {
 	 * - 
 	 * 
 	 * */
-	public static String parseWorkoutJson(String inputData) {
+	public static String getJsonData(String inputData) {
 		
 		return "";
 	}
 	
-	public static String parseWorkoutData(String inputData) {
+	public static String getViewData(String inputData) {
 		
 		return "";
 	}
