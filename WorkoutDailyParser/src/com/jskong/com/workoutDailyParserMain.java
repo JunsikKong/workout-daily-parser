@@ -1,11 +1,17 @@
 package com.jskong.com;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class workoutDailyParserMain {
+	public static final String CURRENT_YEAR = "2023";
 
 	public static void main(String[] args) {
-		System.out.println("workout");
+		System.out.println(System.getProperty("user.dir"));
 		System.out.println(getJsonData("2").toJSONString());
 	}
 	
@@ -56,15 +62,54 @@ public class workoutDailyParserMain {
 	 * 
 	 * */
 	public static JSONObject getJsonData(String inputData) {
+        String filePath = System.getProperty("user.dir") + "\\textfile.txt";
+        Path path = Paths.get(filePath);
+        
+        String strDate = ""; 
+
+        try {
+            // 파일의 모든 줄을 리스트로 읽어옴
+            List<String> lines = Files.readAllLines(path);
+
+            // 각 줄을 출력
+            for (String line : lines) {
+            	if ("".equals(line)) {
+            		continue;
+            	}
+            	
+            	line = line.trim();
+            	
+            	if ("".equals(strDate)) { // 날짜 설정
+            		if (line.matches("\\d+")) {
+            			if (line.length() == 4) {
+            				strDate = CURRENT_YEAR + line;
+                		}
+                		else if (line.length() == 8) {
+                			strDate = line;
+                		}
+            		}
+            	}
+            	else {
+            		
+            	}
+
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+		
 		JSONObject jsonTempSet = new JSONObject();
 		JSONObject jsonTempWork = new JSONObject();
         JSONArray jsonArrSet = new JSONArray();
         JSONArray jsonArrWork = new JSONArray();
         JSONObject jsonFinal = new JSONObject();
         
-        int works = 1;
-        int sets = 1;
-        jsonFinal.put("DATE", "YYYYMMDD");
+        int works = 5;
+        int sets = 3;
+
+        jsonFinal.put("DATE", strDate);
         for(int i = 0; i < works; i++) {
         	jsonTempWork.put("WORK_SEQ", i + 1);
         	jsonTempWork.put("WORK_NAME", "운동");
@@ -79,11 +124,16 @@ public class workoutDailyParserMain {
                 jsonTempSet = new JSONObject();
             }
         	jsonTempWork.put("WORK_SET", jsonArrSet);
+        	jsonArrSet = new JSONArray();
+        	
         	jsonArrWork.add(jsonTempWork);
             jsonTempWork = new JSONObject();
         }
         jsonFinal.put("WORK", jsonArrWork);
-
+        jsonArrWork = new JSONArray();
+        
+        
+        
         return jsonFinal;
 	}
 	
