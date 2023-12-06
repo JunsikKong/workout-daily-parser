@@ -1,9 +1,12 @@
 package com.jskong.com;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 public class workoutDailyParserMain {
 
 	public static void main(String[] args) {
 		System.out.println("workout");
+		System.out.println(getJsonData("2").toJSONString());
 	}
 	
 	/* [ Delimiter ]	[ Description ]
@@ -25,17 +28,17 @@ public class workoutDailyParserMain {
 	 * 
 	 * 
 	 * < Json Structure >
-	 * ├ date (DATE)
-	 * └ work (ARRAY)
-	 *   ├ work_index (INTEGER)
-	 *   ├ work_name (STRING)
-	 *   ├ work_part (STRING)
-	 *   ├ work_rest (INTEGER)
-	 *   ├ work_opt (STRING)
-	 *   └ work_set (ARRAY)
-	 *     ├ set_index (INTEGER)
-	 *     ├ set_weight (INTEGER)
-	 *     └ set_reps (INTEGER)
+	 * ├ DATE (DATE)
+	 * └ WORK (ARRAY)
+	 *   ├ WORK_SEQ (INTEGER)
+	 *   ├ WORK_NAME (STRING)
+	 *   ├ WORK_PART (STRING)
+	 *   ├ WORK_REST (INTEGER)
+	 *   ├ WORK_OPT (STRING)
+	 *   └ WORK_SET (ARRAY)
+	 *     ├ SET_SEQ (INTEGER)
+	 *     ├ SET_WEIGHT (STRING)
+	 *     └ SET_REPS (INTEGER)
 	 * 
 	 * 
 	 * 
@@ -47,19 +50,45 @@ public class workoutDailyParserMain {
 	 * - 따라서 공백 앞 뒤의 인접자가 숫자인지 아닌지 판별하는 로직 필요
 	 * - 
 	 * - 무게(weight)에 소숫점이 존재 가능
-	 * - work_index, set_index는 1부터 시작, 1씩 증가
+	 * - WORK_SEQ, SET_SEQ는 1부터 시작, 1씩 증가
 	 * - 
 	 * - 
 	 * 
 	 * */
-	public static String getJsonData(String inputData) {
-		
-		return "";
+	public static JSONObject getJsonData(String inputData) {
+		JSONObject jsonTempSet = new JSONObject();
+		JSONObject jsonTempWork = new JSONObject();
+        JSONArray jsonArrSet = new JSONArray();
+        JSONArray jsonArrWork = new JSONArray();
+        JSONObject jsonFinal = new JSONObject();
+        
+        int works = 1;
+        int sets = 1;
+        jsonFinal.put("DATE", "YYYYMMDD");
+        for(int i = 0; i < works; i++) {
+        	jsonTempWork.put("WORK_SEQ", i + 1);
+        	jsonTempWork.put("WORK_NAME", "운동");
+        	jsonTempWork.put("WORK_PART", "부위");
+        	jsonTempWork.put("WORK_REST", "휴식시간");
+        	jsonTempWork.put("WORK_OPT", "옵션");
+        	for(int j = 0; j < sets; j++) {
+            	jsonTempSet.put("SET_SEQ", j + 1);
+            	jsonTempSet.put("SET_WEIGHT", "무게");
+            	jsonTempSet.put("SET_REPS", "횟수");
+            	jsonArrSet.add(jsonTempSet);
+                jsonTempSet = new JSONObject();
+            }
+        	jsonTempWork.put("WORK_SET", jsonArrSet);
+        	jsonArrWork.add(jsonTempWork);
+            jsonTempWork = new JSONObject();
+        }
+        jsonFinal.put("WORK", jsonArrWork);
+
+        return jsonFinal;
 	}
 	
 	public static String getViewData(String inputData) {
 		
 		return "";
 	}
-
 }
