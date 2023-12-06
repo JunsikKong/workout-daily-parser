@@ -9,7 +9,10 @@ import java.util.List;
 
 public class workoutDailyParserMain {
 	public static final String CURRENT_YEAR = "2023";
-
+	public static final String REGEX_YYYYMMDD = "^(19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
+	public static final String REGEX_MMDD = "^(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
+	
+	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
 		System.out.println(getJsonData("2").toJSONString());
@@ -57,7 +60,7 @@ public class workoutDailyParserMain {
 	 * - 
 	 * - 무게(weight)에 소숫점이 존재 가능
 	 * - WORK_SEQ, SET_SEQ는 1부터 시작, 1씩 증가
-	 * - 
+	 * - 컴파운드, 슈퍼 세트 어떻게 저장할 지 고민
 	 * - 
 	 * 
 	 * */
@@ -68,32 +71,31 @@ public class workoutDailyParserMain {
         String strDate = ""; 
 
         try {
-            // 파일의 모든 줄을 리스트로 읽어옴
             List<String> lines = Files.readAllLines(path);
-
-            // 각 줄을 출력
             for (String line : lines) {
-            	if ("".equals(line)) {
-            		continue;
-            	}
+            	System.out.println(line);
             	
             	line = line.trim();
             	
+            	// 1. 빈값 pass
+            	if ("".equals(line)) { continue; }
+            	
+            	// 2. 날짜 처리 후 pass
             	if ("".equals(strDate)) { // 날짜 설정
-            		if (line.matches("\\d+")) {
-            			if (line.length() == 4) {
-            				strDate = CURRENT_YEAR + line;
-                		}
-                		else if (line.length() == 8) {
-                			strDate = line;
-                		}
+            		if (line.matches(REGEX_MMDD)) {
+            			strDate = CURRENT_YEAR + line;
             		}
+            		else if (line.matches(REGEX_YYYYMMDD)) {
+            			strDate = line;
+            		}
+            		else {
+            			System.out.println("### ERROR :: 날짜 형식 에러");
+            			break;
+            		}
+            		continue;
             	}
-            	else {
-            		
-            	}
-
-                System.out.println(line);
+            	
+            	// 3. 운동데이터 처리 후 pass
             }
         } catch (IOException e) {
             e.printStackTrace();
