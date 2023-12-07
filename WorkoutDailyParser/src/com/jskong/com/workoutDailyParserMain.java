@@ -9,9 +9,9 @@ import java.util.List;
 
 public class workoutDailyParserMain {
 	public static final String CURRENT_YEAR = "2023";
-	public static final String REGEX_YYYYMMDD = "^(19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
-	public static final String REGEX_MMDD = "^(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
-	
+	public static final String REG_DATE8 = "^(19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
+	public static final String REG_DATE4 = "^(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
+	public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
 	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
@@ -82,10 +82,10 @@ public class workoutDailyParserMain {
             	
             	// 2. 날짜 처리 후 pass
             	if ("".equals(strDate)) { // 날짜 설정
-            		if (line.matches(REGEX_MMDD)) {
+            		if (line.matches(REG_DATE4)) {
             			strDate = CURRENT_YEAR + line;
             		}
-            		else if (line.matches(REGEX_YYYYMMDD)) {
+            		else if (line.matches(REG_DATE8)) {
             			strDate = line;
             		}
             		else {
@@ -96,6 +96,11 @@ public class workoutDailyParserMain {
             	}
             	
             	// 3. 운동데이터 처리 후 pass
+            	if (line.matches(REG_SIMPLE_KR)) {
+            		
+            	}
+            	
+            	
             }
         } catch (IOException e) {
             e.printStackTrace();
