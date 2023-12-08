@@ -9,13 +9,17 @@ import java.util.List;
 
 public class workoutDailyParserMain {
 	public static final String CURRENT_YEAR = "2023";
-	public static final String REG_DATE8 = "^(19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
-	public static final String REG_DATE4 = "^(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$";
-	public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
+	public static final String REG_DATE8 = "(19|20)([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
+	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
+	public static final String REG_NUM = ".*[0-9].*"; // check name or value
+	public static final String REG_WORKNAME = "[ㄱ-ㅎ]+";
+	public static final String REG_WORKVALUE = "[0-9]+\\.[0-9]+|[0-9]+|\\/|\\*|-|)|(|d[0-9]|d|p|w|a|f";
+	
+	//public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
 	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
-		System.out.println(getJsonData("2").toJSONString());
+		System.out.println(getJsonData("").toJSONString());
 	}
 	
 	/* [ Delimiter ]	[ Description ]
@@ -27,14 +31,18 @@ public class workoutDailyParserMain {
 	 * [ w ]			warming up
 	 * [ p ]			pyramid set
 	 * [ d ]			drop set
-	 * [ c ]			compound set
-	 * [ s ]			super set
+	 * [ dn]			drop set (n set)
 	 * [ f ]			failure point
 	 * 
+	 * [ c ]			compound set
+	 * [ s ]			super set
+	 *  
 	 * [ ) ]			pyramid set(not used)
 	 * [ ( ]			drop set(not used)
 	 * 
 	 * 
+	 * ㅅㅋㅌ				◀ workName + workOpt
+	 * 60-10 10 10/90	◀ workValue
 	 * 
 	 * < Json Structure >
 	 * ├ DATE (DATE)
@@ -84,29 +92,33 @@ public class workoutDailyParserMain {
             	if ("".equals(strDate)) { // 날짜 설정
             		if (line.matches(REG_DATE4)) {
             			strDate = CURRENT_YEAR + line;
+            			System.out.println("OK\n");
             		}
             		else if (line.matches(REG_DATE8)) {
             			strDate = line;
+            			System.out.println("OK\n");
             		}
             		else {
-            			System.out.println("### ERROR :: 날짜 형식 에러");
-            			break;
+            			System.out.println("### ERROR :: 날짜 형식 에러\n");
+            			//break;
             		}
             		continue;
             	}
             	
             	// 3. 운동데이터 처리 후 pass
-            	if (line.matches(REG_SIMPLE_KR)) {
+            	if (!line.matches(REG_NUM)) {
+            		// workName
             		
             	}
-            	
-            	
+            	else {
+            		// workValue
+            		
+            	}
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-		
 		JSONObject jsonTempSet = new JSONObject();
 		JSONObject jsonTempWork = new JSONObject();
         JSONArray jsonArrSet = new JSONArray();
@@ -138,8 +150,6 @@ public class workoutDailyParserMain {
         }
         jsonFinal.put("WORK", jsonArrWork);
         jsonArrWork = new JSONArray();
-        
-        
         
         return jsonFinal;
 	}
