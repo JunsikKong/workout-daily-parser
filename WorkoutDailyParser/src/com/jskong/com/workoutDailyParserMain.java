@@ -6,14 +6,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class workoutDailyParserMain {
 	public static final String CURRENT_YEAR = "2023";
 	public static final String REG_DATE8 = "(19|20)([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
-	public static final String REG_NUM = ".*[0-9].*"; // check name or value
+	public static final String REG_IS_WORKNAME = "([가-힣ㄱ-ㅎ]+)(?![가-힣ㄱ-ㅎ]*-)";
 	public static final String REG_WORKNAME = "[ㄱ-ㅎ]+";
-	public static final String REG_WORKVALUE = "[0-9]+\\.[0-9]+|[0-9]+|\\/|\\*|-|)|(|d[0-9]|d|p|w|a|f";
+	public static final String REG_WORKVALUE = "[가-힣]+|[0-9]+\\.[0-9]+|[0-9]+|\\/|\\*|-|\\)|\\(|d[0-9]|w[0-9]+|d[0-9]+|w|d|f";
 	
 	//public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
 	
@@ -29,9 +31,9 @@ public class workoutDailyParserMain {
 	 * [   ]			set delimiter
 	 * [( )]			ascending/descending
 	 * [ w ]			warming up
-	 * [ p ]			pyramid set
+	 * [ wn ]			warming up (n set)
 	 * [ d ]			drop set
-	 * [ dn]			drop set (n set)
+	 * [ dn ]			drop set (n set)
 	 * [ f ]			failure point
 	 * 
 	 * [ c ]			compound set
@@ -73,11 +75,14 @@ public class workoutDailyParserMain {
 	 * 
 	 * */
 	public static JSONObject getJsonData(String inputData) {
-        String filePath = System.getProperty("user.dir") + "\\textfile.txt";
-        Path path = Paths.get(filePath);
+        String file_path = System.getProperty("user.dir") + "\\textfile.txt";
+        Path path = Paths.get(file_path);
         
-        String strDate = ""; 
-
+        String var_date = "";
+        int count_name = 0;
+        int count_value = 0;
+        Pattern pattern_is_workname = Pattern.compile(REG_IS_WORKNAME);
+        
         try {
             List<String> lines = Files.readAllLines(path);
             for (String line : lines) {
@@ -85,18 +90,18 @@ public class workoutDailyParserMain {
             	
             	line = line.trim();
             	
-            	// 1. 빈값 pass
+            	// 1. 빈 값이 발견될 경우 ▶ PASS
             	if ("".equals(line)) { continue; }
             	
-            	// 2. 날짜 처리 후 pass
-            	if ("".equals(strDate)) { // 날짜 설정
+            	// 2. 날짜 데이터 처리
+            	if ("".equals(var_date)) {
             		if (line.matches(REG_DATE4)) {
-            			strDate = CURRENT_YEAR + line;
-            			System.out.println("OK\n");
+            			var_date = CURRENT_YEAR + line;
+            			System.out.println("### SET DATE\n");
             		}
             		else if (line.matches(REG_DATE8)) {
-            			strDate = line;
-            			System.out.println("OK\n");
+            			var_date = line;
+            			System.out.println("### SET DATE\n");
             		}
             		else {
             			System.out.println("### ERROR :: 날짜 형식 에러\n");
@@ -104,20 +109,40 @@ public class workoutDailyParserMain {
             		}
             		continue;
             	}
-            	
-            	// 3. 운동데이터 처리 후 pass
-            	if (!line.matches(REG_NUM)) {
-            		// workName
+
+            	// 3. 운동NAME 데이터 처리
+            	if (pattern_is_workname.matcher(line).find()) {
+            		// 운동 NAME
+            		// 3.1. 운동NAME-이름 ▶ 배열 적재 (meta에서 초성을 통한 매칭)
+            		// 3.2. 운동NAME-부위 ▶ 배열 적재 (meta에서 이름과 부위 매칭)
+            		// 3.3. 운동NAME-옵션 ▶ 배열 적재 (그대로 서술, * 제거)
             		
+            		
+            		
+            		System.out.println("### NAME\n");
+            		count_name++;
             	}
+            	// 4. 운동VALUE 데이터 처리
             	else {
-            		// workValue
+            		// 운동 VALUE
+            		// 4.0. 운동 NAME보다 운동 VALUE이 먼저 발견될 경우 ▶ PASS
+            		if(count_name <= count_value) {
+            			System.out.println("### PASS\n");
+            			continue;
+            		}
+            		// 3.4. 운동NAME-휴식 ▶ 배열 적재 (없을 경우 c/s 고려)
+
             		
+            		
+            		System.out.println("### VALUE\n");
+            		count_value++;
             	}
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
+        System.out.println("### NAME :: " + count_name + " / VALUE :: " + count_value);
 
 		JSONObject jsonTempSet = new JSONObject();
 		JSONObject jsonTempWork = new JSONObject();
@@ -128,13 +153,13 @@ public class workoutDailyParserMain {
         int works = 5;
         int sets = 3;
 
-        jsonFinal.put("DATE", strDate);
+        jsonFinal.put("DATE", var_date);
         for(int i = 0; i < works; i++) {
         	jsonTempWork.put("WORK_SEQ", i + 1);
-        	jsonTempWork.put("WORK_NAME", "운동");
+        	jsonTempWork.put("WORK_NAME", "운동이름");
         	jsonTempWork.put("WORK_PART", "부위");
-        	jsonTempWork.put("WORK_REST", "휴식시간");
         	jsonTempWork.put("WORK_OPT", "옵션");
+        	jsonTempWork.put("WORK_REST", "휴식시간");
         	for(int j = 0; j < sets; j++) {
             	jsonTempSet.put("SET_SEQ", j + 1);
             	jsonTempSet.put("SET_WEIGHT", "무게");
