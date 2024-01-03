@@ -15,7 +15,7 @@ public class workoutDailyParserMain {
 	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_IS_WORKNAME = "([가-힣ㄱ-ㅎ]+)(?![가-힣ㄱ-ㅎ]*-)";
 	public static final String REG_WORKNAME = "[ㄱ-ㅎ]+";
-	public static final String REG_WORKVALUE = "[가-힣]+|[0-9]+\\.[0-9]+|[0-9]+|\\/|\\*|-|\\)|\\(|d[0-9]|w[0-9]+|d[0-9]+|w|d|f";
+	public static final String REG_WORKVALUE = "[가-힣]+-|[0-9]+\\.[0-9]+|[0-9]+|\\/|\\*|-|\\)|\\(|d[0-9]|w[0-9]+|d[0-9]+|w|d|f";
 	
 	//public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
 	
@@ -30,17 +30,15 @@ public class workoutDailyParserMain {
 	 * [ * ]			set count
 	 * [   ]			set delimiter
 	 * [( )]			ascending/descending
-	 * [ w ]			warming up
-	 * [ wn ]			warming up (n set)
-	 * [ d ]			drop set
-	 * [ dn ]			drop set (n set)
+	 * [ w(n) ]			warming up set (n set)
+	 * [ d(n) ]			drop set (n set)
 	 * [ f ]			failure point
 	 * 
 	 * [ c ]			compound set
 	 * [ s ]			super set
 	 *  
-	 * [ ) ]			pyramid set(not used)
-	 * [ ( ]			drop set(not used)
+	 * [ ) ]			warming up set (not used)
+	 * [ ( ]			drop set (not used)
 	 * 
 	 * 
 	 * ㅅㅋㅌ				◀ workName + workOpt
@@ -117,7 +115,11 @@ public class workoutDailyParserMain {
             		// 3.2. 운동NAME-부위 ▶ 배열 적재 (meta에서 이름과 부위 매칭)
             		// 3.3. 운동NAME-옵션 ▶ 배열 적재 (그대로 서술, * 제거)
             		
-            		
+            		// 1) 초성탐색
+            		// 2) 초성 meta에서 운동명 변환 후 적재
+            		// 3) 운동명 meta에서 부위 변환 후 적재
+            		// 4) 나머지 문구 "*" 제거 후 옵션 배열에 적재
+            		// 5) 휴식은 운동 VALUE 처리 후 마지막에 적재
             		
             		System.out.println("### NAME\n");
             		count_name++;
@@ -132,7 +134,14 @@ public class workoutDailyParserMain {
             		}
             		// 3.4. 운동NAME-휴식 ▶ 배열 적재 (없을 경우 c/s 고려)
 
-            		
+            		// 1) 정규식으로 나눠 split 배열 저장
+            		// 2) 숫자/예약어 등 분기 설정
+            		// w일 경우
+            		// wn일 경우
+            		// d일 경우
+            		// dn일 경우
+            		// f일 경우
+            		// - , / , * , ( , ) , 
             		
             		System.out.println("### VALUE\n");
             		count_value++;
@@ -150,8 +159,8 @@ public class workoutDailyParserMain {
         JSONArray jsonArrWork = new JSONArray();
         JSONObject jsonFinal = new JSONObject();
         
-        int works = 5;
-        int sets = 3;
+        int works = 5; // 변경
+        int sets = 3; // 변경
 
         jsonFinal.put("DATE", var_date);
         for(int i = 0; i < works; i++) {
