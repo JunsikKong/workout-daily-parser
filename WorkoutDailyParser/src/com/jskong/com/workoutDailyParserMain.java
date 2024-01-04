@@ -93,12 +93,12 @@ public class workoutDailyParserMain {
             	
             	// 2. 날짜 데이터 처리
             	if ("".equals(var_date)) {
-            		if (line.matches(REG_DATE4)) {
-            			var_date = CURRENT_YEAR + line;
+            		if (line.matches(REG_DATE8)) {
+            			var_date = line;
             			System.out.println("### SET DATE\n");
             		}
-            		else if (line.matches(REG_DATE8)) {
-            			var_date = line;
+            		else if (line.matches(REG_DATE4)) {
+            			var_date = CURRENT_YEAR + line;
             			System.out.println("### SET DATE\n");
             		}
             		else {
@@ -133,6 +133,10 @@ public class workoutDailyParserMain {
             			continue;
             		}
             		// 3.4. 운동NAME-휴식 ▶ 배열 적재 (없을 경우 c/s 고려)
+            		// - "/" 이 없을 경우
+            		// 1) c/s ▶ 배열 적재 "운동명;운동명"
+            		// 2) 카운트
+            		// 3) 0초 휴식
 
             		// 1) 정규식으로 나눠 split 배열 저장
             		// 2) 숫자/예약어 등 분기 설정
