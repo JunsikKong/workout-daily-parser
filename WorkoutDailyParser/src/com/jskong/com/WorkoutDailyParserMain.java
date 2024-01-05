@@ -9,17 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class workoutDailyParserMain {
+public class WorkoutDailyParserMain {
 	public static final String CURRENT_YEAR = "2023";
 	public static final String REG_DATE8 = "(19|20)([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
-	public static final String REG_IS_WORKNAME = "([가-힣ㄱ-ㅎ]+)(?![가-힣ㄱ-ㅎ]*-)";
-	public static final String REG_WORKTITLE = "[^ㄱ-ㅎ]+";
-	public static final String REG_WORKOPT   = "[ㄱ-ㅎ]+";
-	public static final String REG_WORKVALUE = "[^wdf0-9.가-힣ㄱ-ㅎ-\\/\\*\\(\\)]+";
-	public static final String REG_WORK_WARM_DROP = "w[0-9]*|d[0-9]*";
-	
-	//public static final String REG_SIMPLE_KR = "[ㄱ-ㅎ]+";
+	public static final String REG_IS_NAME = "([가-힣ㄱ-ㅎ]+)(?![가-힣ㄱ-ㅎ]*-)";
+	public static final String REG_TITLE = "[ㄱ-ㅎ]+";
+	public static final String REG_VALUE = "[^wdf0-9.가-힣ㄱ-ㅎ-\\/\\*\\(\\)]+";
+	public static final String REG_WARM_DROP = "w[0-9]*|d[0-9]*";
 	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
@@ -47,7 +44,7 @@ public class workoutDailyParserMain {
 	 * 
 	 * 
 	 * ex1)
-	 * ㅅㅋㅌ 바벨			◀ WORK_TITLE + WORK_OPT = WORK_NAME
+	 * ㅅㅋㅌ 바벨			◀ WORK_NAME = WORK_TITLE + WORK_OPT
 	 * 60-10 10 10/90	◀ WORK_VALUE
 	 * 
 	 * 
@@ -109,7 +106,7 @@ public class workoutDailyParserMain {
         
         int count_name = 0;
         int count_value = 0;
-        Pattern pattern_is_workname = Pattern.compile(REG_IS_WORKNAME);
+        Pattern pattern_is_workname = Pattern.compile(REG_IS_NAME);
         
         try {
             List<String> lines = Files.readAllLines(path);
@@ -133,7 +130,7 @@ public class workoutDailyParserMain {
             			System.out.println("▶▶▶ DATE ... OK\n");
             		}
             		else {
-            			System.out.println("### ERROR :: 날짜 형식에 맞지 않음.\n");
+            			System.out.println("### 오류 :: 날짜 형식에 맞지 않음.\n");
             			//break;
             		}
             		continue;
@@ -143,8 +140,7 @@ public class workoutDailyParserMain {
             	if (pattern_is_workname.matcher(line).find()) {
             		System.out.println("▶▶▶ 2. NAME");
             		
-            		String[] __arr_title = line.split(REG_WORKTITLE);
-            		String[] __arr_opt = line.split(REG_WORKOPT);
+            		String[] __arr_name = line.split(" ");
             		String __title = "";
             		String __opt = "";
             		String __part = "";
@@ -154,7 +150,8 @@ public class workoutDailyParserMain {
             		* - 0번째 = title
             		* - 1번째 이상 = opt
             		* - ▶ 0번째가 초성인 경우 ▶ 메타에서 매핑
-            		* - ▶▶ 
+            		* - ▶▶ 메타에 있을 경우 ▶ 매핑된 데이터 저장
+            		* - ▶▶ 아닌경우 ▶ 그대로 저장 후 [경고]
             		* - ▶ 아닌경우 ▶ 그대로 저장 후 [경고]
             		* 
             		* 
@@ -162,23 +159,33 @@ public class workoutDailyParserMain {
             		
             		
             		// 2.1. 추출
-            		// 2.1.1. TITLE
-            		for (int i=0 ; i<__arr_title.length; i++) {
-            			__arr_title[i] = __arr_title[i].trim();
-            			if("".equals(__arr_title[i])) { continue; }
-            			__title = __arr_title[i];
-            			break;
+            		System.out.println(Integer.toString(__arr_name.length));
+            		for (int i = 0 ; i < __arr_name.length; i++) {
+            			__arr_name[i] = __arr_name[i].trim();
+            			if("".equals(__arr_name[i])) { continue; }
+            			System.out.println(__arr_name[i]);
+            			
+            			if("".equals(__title)) {
+            				if(__arr_name[i].matches(REG_TITLE)) {
+            					if( true ) {
+            						// TITLE 성공
+            					}
+            					else {
+            						System.out.println("### 경고 : TITLE 메타에 해당 초성이 존재하지 않음.");
+            					}
+            				}
+            				else {
+            					System.out.println("### 경고 : TITLE이 초성이 아님.");
+            				}
+            				__title = __arr_name[i];
+            			}
+            			else {
+            				__opt += __arr_name[i].replace("*", "");
+            			}
             		}
             		System.out.println("[1] TITLE :: " + __title);
-            		
-            		// 2.1.2. OPT
-            		for (int i=0 ; i<__arr_opt.length; i++) {
-            			__arr_opt[i] = __arr_opt[i].trim();
-            			if("".equals(__arr_opt[i])) { continue; }
-            			__opt += __arr_opt[i];
-            		}
-            		__opt = __opt.replace("*", "");
             		System.out.println("[2] OPT   :: " + __opt);
+
             		
             		// 2.1.3. PART
             		System.out.println("[3] PART  :: " + __part);
@@ -219,7 +226,7 @@ public class workoutDailyParserMain {
             	else {
             		// 4.0. NAME보다 VALUE가 먼저 발견될 경우 ▶ PASS
             		if(count_name <= count_value) {
-            			System.out.println("### ERROR :: NAME 형식에 맞지 않음.\n");
+            			System.out.println("### 오류 :: NAME 형식에 맞지 않음.\n");
             			continue;
             		}
             		System.out.println("▶▶▶ 3 VALUE");
@@ -230,7 +237,7 @@ public class workoutDailyParserMain {
             		line = line.replace("(", " ( ");
             		line = line.replace(")", " ) ");
             		
-            		String[] __arr_value = line.split(REG_WORKVALUE);
+            		String[] __arr_value = line.split(REG_VALUE);
             		
             		String __rest = "";
             		String __reps = "";
@@ -238,7 +245,7 @@ public class workoutDailyParserMain {
             		
             		for (int i=0 ; i<__arr_value.length; i++) {
             			// w & d 처리
-            			if(__arr_value[i].matches(REG_WORK_WARM_DROP)) {
+            			if(__arr_value[i].matches(REG_WARM_DROP)) {
             				String __first = __arr_value[i].substring(0, 1);
             				String __last  = __arr_value[i].substring(1);
             				if("".equals("")) { __last = "1"; }
@@ -298,8 +305,8 @@ public class workoutDailyParserMain {
         
         System.out.println("### NAME :: " + count_name + " / VALUE :: " + count_value);
 
-		JSONObject jsonTempSet = new JSONObject();
-		JSONObject jsonTempWork = new JSONObject();
+		//JSONObject jsonTempSet = new JSONObject();
+		//JSONObject jsonTempWork = new JSONObject();
         JSONArray jsonArrSet = new JSONArray();
         JSONArray jsonArrWork = new JSONArray();
         JSONObject jsonFinal = new JSONObject();
@@ -309,23 +316,24 @@ public class workoutDailyParserMain {
 
         jsonFinal.put("DATE", work_date);
         for(int i = 0; i < works; i++) {
+        	JSONObject jsonTempWork = new JSONObject();
         	jsonTempWork.put("WORK_SEQ", i + 1);
         	jsonTempWork.put("WORK_TITLE", "운동이름");
         	jsonTempWork.put("WORK_PART", "부위");
         	jsonTempWork.put("WORK_OPT", "옵션");
         	jsonTempWork.put("WORK_REST", "휴식시간");
         	for(int j = 0; j < sets; j++) {
+        		JSONObject jsonTempSet = new JSONObject();
             	jsonTempSet.put("SET_SEQ", j + 1);
             	jsonTempSet.put("SET_WEIGHT", "무게");
             	jsonTempSet.put("SET_REPS", "횟수");
             	jsonArrSet.add(jsonTempSet);
-                jsonTempSet = new JSONObject();
             }
         	jsonTempWork.put("WORK_SET", jsonArrSet);
+        	jsonTempWork.put("WORK_SET", "TT");
         	jsonArrSet = new JSONArray();
         	
         	jsonArrWork.add(jsonTempWork);
-            jsonTempWork = new JSONObject();
         }
         jsonFinal.put("WORK", jsonArrWork);
         jsonArrWork = new JSONArray();
