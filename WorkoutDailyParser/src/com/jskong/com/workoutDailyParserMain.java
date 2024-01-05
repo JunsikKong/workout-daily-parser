@@ -99,38 +99,37 @@ public class workoutDailyParserMain {
         String file_path = System.getProperty("user.dir") + "\\textfile.txt";
         Path path = Paths.get(file_path);
         
-        String var_date = "";
+        String work_date = "";
+        ArrayList<String> work_title = new ArrayList<String>();
+        ArrayList<String> work_part = new ArrayList<String>();
+        ArrayList<String> work_rest = new ArrayList<String>();
+        ArrayList<String> work_opt = new ArrayList<String>();
+        ArrayList<String> work_reps = new ArrayList<String>();
+        ArrayList<String> work_weight = new ArrayList<String>();
+        
         int count_name = 0;
         int count_value = 0;
         Pattern pattern_is_workname = Pattern.compile(REG_IS_WORKNAME);
         
         try {
             List<String> lines = Files.readAllLines(path);
-            ArrayList<String> workn_title = new ArrayList<String>();
-            ArrayList<String> workn_part = new ArrayList<String>();
-            ArrayList<String> workn_rest = new ArrayList<String>();
-            ArrayList<String> workn_opt = new ArrayList<String>();
-            ArrayList<String> workv_reps = new ArrayList<String>();
-            ArrayList<String> workv_weight = new ArrayList<String>();
-            
-            
+
             for (String line : lines) {
             	// 0. 데이터 전처리
-            	line = line.trim(); // line 양 옆의 공백 제거
-            	line = line.replaceAll("\\s*-\\s*", "-"); // "-" 양 옆의 공백 제거
-            	
-            	// 1. 공백 ▶ PASS
-            	if ("".equals(line)) { continue; }
+            	line = line.trim(); 						// line 양 옆의 공백 제거
+            	line = line.replaceAll("\\s*-\\s*", "-"); 	// '-' 양 옆의 공백 제거
+            	if ("".equals(line)) { continue; } 			// 공백 ▶ PASS
             	System.out.println("● INPUT :: " + line);
             	
-            	// 2. DATE 처리
-            	if ("".equals(var_date)) {
+            	// 1. DATE
+            	if ("".equals(work_date)) {
+            		System.out.println("▶▶▶ 1. DATE");
             		if (line.matches(REG_DATE8)) {
-            			var_date = line;
+            			work_date = line;
             			System.out.println("▶▶▶ DATE ... OK\n");
             		}
             		else if (line.matches(REG_DATE4)) {
-            			var_date = CURRENT_YEAR + line;
+            			work_date = CURRENT_YEAR + line;
             			System.out.println("▶▶▶ DATE ... OK\n");
             		}
             		else {
@@ -140,15 +139,30 @@ public class workoutDailyParserMain {
             		continue;
             	}
 
-            	// 3. WORK NAME 처리
+            	// 2. WORK NAME
             	if (pattern_is_workname.matcher(line).find()) {
-            		System.out.println("▶▶▶ NAME");
+            		System.out.println("▶▶▶ 2. NAME");
+            		
             		String[] __arr_title = line.split(REG_WORKTITLE);
             		String[] __arr_opt = line.split(REG_WORKOPT);
             		String __title = "";
             		String __opt = "";
             		String __part = "";
             		
+            		/* title, opt 구분 로직 변경 예정
+            		* - ' ' 로 split 후
+            		* - 0번째 = title
+            		* - 1번째 이상 = opt
+            		* - ▶ 0번째가 초성인 경우 ▶ 메타에서 매핑
+            		* - ▶▶ 
+            		* - ▶ 아닌경우 ▶ 그대로 저장 후 [경고]
+            		* 
+            		* 
+            		*/
+            		
+            		
+            		// 2.1. 추출
+            		// 2.1.1. TITLE
             		for (int i=0 ; i<__arr_title.length; i++) {
             			__arr_title[i] = __arr_title[i].trim();
             			if("".equals(__arr_title[i])) { continue; }
@@ -157,31 +171,49 @@ public class workoutDailyParserMain {
             		}
             		System.out.println("[1] TITLE :: " + __title);
             		
+            		// 2.1.2. OPT
             		for (int i=0 ; i<__arr_opt.length; i++) {
             			__arr_opt[i] = __arr_opt[i].trim();
             			if("".equals(__arr_opt[i])) { continue; }
-            			__opt = __arr_opt[i];
+            			__opt += __arr_opt[i];
             		}
+            		__opt = __opt.replace("*", "");
             		System.out.println("[2] OPT   :: " + __opt);
             		
-            		// ...부위 로직...
+            		// 2.1.3. PART
             		System.out.println("[3] PART  :: " + __part);
+            		__part = "임시";
             		
             		
             		
+            		// 2.2. 리스트 적재 - C/S인 경우 ▶ ';' 구분자 추가
+            		// 2.2.1. TITLE
+            		if(count_name > count_value) {
+            			int __last_index = work_title.size() - 1;
+            			String  __last_title = work_title.get(__last_index);
+            			work_title.set(__last_index, __last_title + ";" + __title);
+            		}
+            		else {
+            			work_title.add(__title);
+            		}
             		
+            		// 2.2.2. OPT
+            		work_opt.add(__opt);
+            		if(count_name > count_value) {
+            			int __last_index = work_opt.size() - 1;
+            			String  __last_opt = work_opt.get(__last_index);
+            			work_opt.set(__last_index, __last_opt + ";" + __title);
+            		}
+            		else {
+            			work_opt.add(__title);
+            		}
             		
-            		// 3.1. 운동NAME-이름 ▶ 배열 적재 (meta에서 초성을 통한 매칭)
-            		// 3.2. 운동NAME-부위 ▶ 배열 적재 (meta에서 이름과 부위 매칭)
-            		// 3.3. 운동NAME-옵션 ▶ 배열 적재 (그대로 서술, * 제거)
+            		// 2.2.3. PART
+            		// ...blabla...
+            		work_part.add(__part);
             		
-            		// 1) 초성탐색
-            		// 2) 초성 meta에서 운동명 변환 후 적재
-            		// 3) 운동명 meta에서 부위 변환 후 적재
-            		// 4) 나머지 문구 "*" 제거 후 옵션 배열에 적재
-            		// 5) 휴식은 운동 VALUE 처리 후 마지막에 적재
-            		System.out.println("");
             		count_name++;
+            		System.out.println("");
             	}
             	// 4. WORK VALUE 처리
             	else {
@@ -190,7 +222,8 @@ public class workoutDailyParserMain {
             			System.out.println("### ERROR :: NAME 형식에 맞지 않음.\n");
             			continue;
             		}
-            		System.out.println("▶▶▶ VALUE");
+            		System.out.println("▶▶▶ 3 VALUE");
+            		
             		line = line.replace("-", " - ");
             		line = line.replace("/", " / ");
             		line = line.replace("*", " * ");
@@ -254,8 +287,9 @@ public class workoutDailyParserMain {
             		3) reps --- null
             		=> 경고 후에 0회
             		*/
-            		System.out.println("");
+            		
             		count_value++;
+            		System.out.println("");
             	}
             }
         } catch (IOException e) {
@@ -273,7 +307,7 @@ public class workoutDailyParserMain {
         int works = 5; // 변경
         int sets = 3; // 변경
 
-        jsonFinal.put("DATE", var_date);
+        jsonFinal.put("DATE", work_date);
         for(int i = 0; i < works; i++) {
         	jsonTempWork.put("WORK_SEQ", i + 1);
         	jsonTempWork.put("WORK_TITLE", "운동이름");
