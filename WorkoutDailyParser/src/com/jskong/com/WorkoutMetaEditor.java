@@ -1,72 +1,94 @@
 package com.jskong.com;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import org.json.simple.JSONArray;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.json.simple.JSONObject;
 
 public class WorkoutMetaEditor {
-	public static final String[] META_PART = {"하체", "등", "가슴", "어깨", "이두", "삼두", "코어", "복근"};
+	public static final List<String> META_PART = new ArrayList<>(Arrays.asList("하체", "등", "가슴", "어깨", "이두", "삼두", "코어", "복근"));
 	
 	public static void main(String[] args) {
-		JSONObject obj = new JSONObject();
-		obj.put("name", "mine-it-record");
-		obj.put("mine", "GN");
-		obj.put("year", 2021);
-
+		String csvfile_path = System.getProperty("user.dir") + "\\csvfile.csv";
+		String jsonfile_path = System.getProperty("user.dir") + "\\jsonfile.json";
+		
+		JSONObject jsonFinal = csvToJson(readCSV(csvfile_path));
+		writeJSON(jsonFinal, jsonfile_path);
+		
+	}
+	
+	public static List<List<String>> readCSV(String file_path) {
+		List<List<String>> csvList = new ArrayList<List<String>>();
+		File csv = new File(file_path);
+		BufferedReader br = null;
+		String line = "";
+		
 		try {
-			FileWriter file = new FileWriter("c:/mine_data/mine.json");
-			file.write(obj.toJSONString());
+			br = new BufferedReader(new FileReader(csv));
+			br.readLine();
+			while ((line = br.readLine()) != null) {
+				List<String> aLine = new ArrayList<String>();
+				String[] lineArr = line.split(",");
+				
+				System.out.print("입력 : " + Arrays.toString(lineArr));
+				if(META_PART.contains(lineArr[0])) {
+					aLine = Arrays.asList(lineArr);
+					csvList.add(aLine);
+					System.out.println(" ... 성공");
+				}
+				else {
+					System.out.println(" ... 실패");
+					break;
+				}
+			}
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				if(br != null) {
+					br.close();
+				}
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return csvList;
+	}
+
+	public static JSONObject csvToJson(List<List<String>> csvList) {
+		JSONObject jsonFinal = new JSONObject();
+		for(List<String> ls : csvList) {
+			JSONObject jsonTemp = new JSONObject();
+			jsonTemp.put(ls.get(1), ls.get(2));
+			jsonFinal.put(ls.get(0), jsonTemp);
+		}
+		
+		System.out.println(jsonFinal.toJSONString());
+		
+		return jsonFinal;
+	}
+	
+	public static boolean writeJSON(JSONObject jsonFinal, String file_path) {
+		try {
+			FileWriter file = new FileWriter(file_path);
+			file.write(jsonFinal.toJSONString());
 			file.flush();
 			file.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
-		
-		
-		//JSONObject jsonTempSet = new JSONObject();
-		//JSONObject jsonTempWork = new JSONObject();
-        JSONArray jsonArrSet = new JSONArray();
-        JSONArray jsonArrWork = new JSONArray();
-        JSONObject jsonFinal = new JSONObject();
-        
-        int works = 5; // 변경
-        int sets = 3; // 변경
-
-        
-        
-        
-        for(String part : META_PART) {
-        }
-        jsonFinal.put("DATE", work_date);
-        
-        
-        for(int i = 0; i < works; i++) {
-        	JSONObject jsonTempWork = new JSONObject();
-        	jsonTempWork.put("WORK_SEQ", i + 1);
-        	jsonTempWork.put("WORK_TITLE", "운동이름");
-        	jsonTempWork.put("WORK_PART", "부위");
-        	jsonTempWork.put("WORK_OPT", "옵션");
-        	jsonTempWork.put("WORK_REST", "휴식시간");
-        	for(int j = 0; j < sets; j++) {
-        		JSONObject jsonTempSet = new JSONObject();
-            	jsonTempSet.put("SET_SEQ", j + 1);
-            	jsonTempSet.put("SET_WEIGHT", "무게");
-            	jsonTempSet.put("SET_REPS", "횟수");
-            	jsonArrSet.add(jsonTempSet);
-            }
-        	jsonTempWork.put("WORK_SET", jsonArrSet);
-        	jsonArrSet = new JSONArray();
-        	
-        	jsonArrWork.add(jsonTempWork);
-        }
-        jsonFinal.put("WORK", jsonArrWork);
-        jsonArrWork = new JSONArray();
-        
-        
-		System.out.print(obj);
+		return false;
 	}
 
 }

@@ -307,36 +307,35 @@ public class WorkoutDailyParserMain {
 
 		//JSONObject jsonTempSet = new JSONObject();
 		//JSONObject jsonTempWork = new JSONObject();
-        JSONArray jsonArrSet = new JSONArray();
-        JSONArray jsonArrWork = new JSONArray();
+        
+        
         JSONObject jsonFinal = new JSONObject();
         
         int works = 5; // 변경
         int sets = 3; // 변경
 
+        JSONArray jsonArrTemp1 = new JSONArray();
         jsonFinal.put("DATE", work_date);
         for(int i = 0; i < works; i++) {
-        	JSONObject jsonTempWork = new JSONObject();
-        	jsonTempWork.put("WORK_SEQ", i + 1);
-        	jsonTempWork.put("WORK_TITLE", "운동이름");
-        	jsonTempWork.put("WORK_PART", "부위");
-        	jsonTempWork.put("WORK_OPT", "옵션");
-        	jsonTempWork.put("WORK_REST", "휴식시간");
+        	JSONObject jsonTemp1 = new JSONObject();
+        	JSONArray jsonArrTemp2 = new JSONArray();
+        	jsonTemp1.put("WORK_SEQ", i + 1);
+        	jsonTemp1.put("WORK_TITLE", "운동이름");
+        	jsonTemp1.put("WORK_PART", "부위");
+        	jsonTemp1.put("WORK_OPT", "옵션");
+        	jsonTemp1.put("WORK_REST", "휴식시간");
         	for(int j = 0; j < sets; j++) {
-        		JSONObject jsonTempSet = new JSONObject();
-            	jsonTempSet.put("SET_SEQ", j + 1);
-            	jsonTempSet.put("SET_WEIGHT", "무게");
-            	jsonTempSet.put("SET_REPS", "횟수");
-            	jsonArrSet.add(jsonTempSet);
+        		JSONObject jsonTemp2 = new JSONObject();
+            	jsonTemp2.put("SET_SEQ", j + 1);
+            	jsonTemp2.put("SET_WEIGHT", "무게");
+            	jsonTemp2.put("SET_REPS", "횟수");
+            	jsonArrTemp2.add(jsonTemp2);
             }
-        	jsonTempWork.put("WORK_SET", jsonArrSet);
-        	jsonTempWork.put("WORK_SET", "TT");
-        	jsonArrSet = new JSONArray();
-        	
-        	jsonArrWork.add(jsonTempWork);
+        	jsonTemp1.put("WORK_SET", jsonArrTemp2);
+        	jsonTemp1.put("WORK_SET", "TT");
+        	jsonArrTemp1.add(jsonTemp1);
         }
-        jsonFinal.put("WORK", jsonArrWork);
-        jsonArrWork = new JSONArray();
+        jsonFinal.put("WORK", jsonArrTemp1);
         
         return jsonFinal;
 	}
