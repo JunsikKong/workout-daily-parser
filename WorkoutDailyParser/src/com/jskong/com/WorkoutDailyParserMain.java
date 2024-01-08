@@ -1,15 +1,28 @@
 package com.jskong.com;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class WorkoutDailyParserMain {
+	public static final String INPUT_TEXT_PATH = System.getProperty("user.dir") + "\\textfile.txt";
+	public static final String BASE_JSON_PATH = System.getProperty("user.dir") + "\\jsonfile.json";
+	public static final String OUTPUT_JSON_PATH = System.getProperty("user.dir") + "\\out.json";
+	
 	public static final String CURRENT_YEAR = "2023";
 	public static final String REG_DATE8 = "(19|20)([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
@@ -21,6 +34,7 @@ public class WorkoutDailyParserMain {
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
 		System.out.println(getJsonData("").toJSONString());
+		readJSON();
 	}
 	
 	/* [ Delimiter ]	[ Description ]
@@ -93,8 +107,7 @@ public class WorkoutDailyParserMain {
 	 * 
 	 * */
 	public static JSONObject getJsonData(String inputData) {
-        String file_path = System.getProperty("user.dir") + "\\textfile.txt";
-        Path path = Paths.get(file_path);
+        Path path = Paths.get(INPUT_TEXT_PATH);
         
         String work_date = "";
         ArrayList<String> work_title = new ArrayList<String>();
@@ -262,7 +275,6 @@ public class WorkoutDailyParserMain {
             				
             			}
             			
-            			
             			System.out.println("VALUE(" + Integer.toString(i) + ") :: " + __arr_value[i]); 
             		}
 
@@ -343,5 +355,45 @@ public class WorkoutDailyParserMain {
 	public static String getViewData(String inputData) {
 		
 		return "";
+	}
+	
+	
+	
+	
+	public static void readJSON() {
+		JSONParser parser = new JSONParser();
+		List<String> ls = new ArrayList<String>();
+
+		try {
+			FileReader reader = new FileReader(BASE_JSON_PATH);
+			Object obj = parser.parse(reader);
+			JSONObject jsonObject = (JSONObject) obj;
+			reader.close();
+			
+			for(String base : WorkoutMetaEditor.BASE_PART) {
+				JSONArray jsarr = (JSONArray)jsonObject.get(base);
+				for(int i=0; i<jsarr.size(); i++) {
+					JSONObject jstmp = (JSONObject)jsarr.get(i);
+					
+					Iterator iter =  jstmp.keySet().iterator();
+					while( iter.hasNext() )
+					{
+						String key = (String)iter.next();
+						System.out.println("### :: " + key);
+					}
+					
+				}
+			}
+					
+			System.out.println(jsonObject.get("하체"));
+			System.out.println(jsonObject.get("가슴"));
+			System.out.println(jsonObject.get("등"));
+			System.out.println(jsonObject.get("이두"));
+			System.out.println(jsonObject.get("ㅋㅋ"));
+			
+		} 
+		catch (IOException | ParseException e) {
+			e.printStackTrace();
+		}
 	}
 }
