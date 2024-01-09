@@ -379,9 +379,9 @@ public class WorkoutDailyParserMain {
 					while( iter.hasNext() )
 					{
 						String key = (String)iter.next();
-						System.out.println("### :: " + key);
+						System.out.println("### KEY    :: " + key);
+						System.out.println("### VALUE  :: " + jstmp.get(key));
 					}
-					
 				}
 			}
 					
@@ -390,7 +390,6 @@ public class WorkoutDailyParserMain {
 			System.out.println(jsonObject.get("등"));
 			System.out.println(jsonObject.get("이두"));
 			System.out.println(jsonObject.get("ㅋㅋ"));
-			
 		} 
 		catch (IOException | ParseException e) {
 			e.printStackTrace();
