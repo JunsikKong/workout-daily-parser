@@ -33,8 +33,8 @@ public class WorkoutDailyParserMain {
 	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
-		System.out.println(getJsonData("").toJSONString());
-		readJSON();
+		System.out.println(getWorkoutJSON("").toJSONString());
+		getBaseJSON();
 	}
 	
 	/* [ Delimiter ]	[ Description ]
@@ -106,7 +106,10 @@ public class WorkoutDailyParserMain {
 	 * - 
 	 * 
 	 * */
-	public static JSONObject getJsonData(String inputData) {
+	
+	public static JSONObject getWorkoutJSON(String inputData) {
+		JSONObject baseJSON = getBaseJSON();
+		
         Path path = Paths.get(INPUT_TEXT_PATH);
         
         String work_date = "";
@@ -158,19 +161,6 @@ public class WorkoutDailyParserMain {
             		String __opt = "";
             		String __part = "";
             		
-            		/* title, opt 구분 로직 변경 예정
-            		* - ' ' 로 split 후
-            		* - 0번째 = title
-            		* - 1번째 이상 = opt
-            		* - ▶ 0번째가 초성인 경우 ▶ 메타에서 매핑
-            		* - ▶▶ 메타에 있을 경우 ▶ 매핑된 데이터 저장
-            		* - ▶▶ 아닌경우 ▶ 그대로 저장 후 [경고]
-            		* - ▶ 아닌경우 ▶ 그대로 저장 후 [경고]
-            		* 
-            		* 
-            		*/
-            		
-            		
             		// 2.1. 추출
             		System.out.println(Integer.toString(__arr_name.length));
             		for (int i = 0 ; i < __arr_name.length; i++) {
@@ -178,8 +168,46 @@ public class WorkoutDailyParserMain {
             			if("".equals(__arr_name[i])) { continue; }
             			System.out.println(__arr_name[i]);
             			
+            			// set title
             			if("".equals(__title)) {
+            				System.out.println("♥ 1");
             				if(__arr_name[i].matches(REG_TITLE)) {
+            					System.out.println("♥ 2");
+            					String __base = "";
+            					String __key = "";
+            					String __value = "";
+            					
+            					for(String base : WorkoutMetaEditor.BASE_PART) {
+            						System.out.println("♥ 3");
+            						JSONArray tempJSONArray = (JSONArray)baseJSON.get(base);
+            						for(int j = 0; j < tempJSONArray.size(); j++) {
+            							System.out.println("♥ 4");
+            							JSONObject tempJSONObject = (JSONObject)tempJSONArray.get(j);
+            							
+            							Iterator iter =  tempJSONObject.keySet().iterator();
+            							while( iter.hasNext() )
+            							{
+            								System.out.println("♥ 5");
+            								String __temp_key = (String)iter.next();
+            								if(__temp_key.equals(__arr_name[i])) {
+            									__title = __arr_name[i];
+            									__key = __temp_key;
+            									__value = tempJSONObject.get(__temp_key).toString();
+            									System.out.println("### 성공KEY    :: " + __key);
+                								System.out.println("### 성공VALUE  :: " + __value);
+                								break;
+            								}
+            								else {
+            									System.out.println("### __temp_key    :: " + __temp_key);
+                								System.out.println("### __title  :: " + __title);
+            								}
+            							}
+            						}
+            					}
+            					
+            					
+            					
+            					
             					if( true ) {
             						// TITLE 성공
             					}
@@ -192,6 +220,7 @@ public class WorkoutDailyParserMain {
             				}
             				__title = __arr_name[i];
             			}
+            			// set opt
             			else {
             				__opt += __arr_name[i].replace("*", "");
             			}
@@ -352,29 +381,27 @@ public class WorkoutDailyParserMain {
         return jsonFinal;
 	}
 	
-	public static String getViewData(String inputData) {
+	public static String getWorkoutView(String inputData) {
 		
 		return "";
 	}
 	
-	
-	
-	
-	public static void readJSON() {
+	public static JSONObject getBaseJSON() {
+		JSONObject resultJSON = new JSONObject();
 		JSONParser parser = new JSONParser();
 		List<String> ls = new ArrayList<String>();
 
 		try {
 			FileReader reader = new FileReader(BASE_JSON_PATH);
 			Object obj = parser.parse(reader);
-			JSONObject jsonObject = (JSONObject) obj;
+			resultJSON = (JSONObject) obj;
 			reader.close();
-			
+			//********************************************************************
 			for(String base : WorkoutMetaEditor.BASE_PART) {
-				JSONArray jsarr = (JSONArray)jsonObject.get(base);
+				JSONArray jsarr = (JSONArray)resultJSON.get(base);
+				System.out.println("### MASTER :: " + base);
 				for(int i=0; i<jsarr.size(); i++) {
 					JSONObject jstmp = (JSONObject)jsarr.get(i);
-					
 					Iterator iter =  jstmp.keySet().iterator();
 					while( iter.hasNext() )
 					{
@@ -385,14 +412,17 @@ public class WorkoutDailyParserMain {
 				}
 			}
 					
-			System.out.println(jsonObject.get("하체"));
-			System.out.println(jsonObject.get("가슴"));
-			System.out.println(jsonObject.get("등"));
-			System.out.println(jsonObject.get("이두"));
-			System.out.println(jsonObject.get("ㅋㅋ"));
+			System.out.println(resultJSON.get("하체"));
+			System.out.println(resultJSON.get("가슴"));
+			System.out.println(resultJSON.get("등"));
+			System.out.println(resultJSON.get("이두"));
+			System.out.println(resultJSON.get("ㅋㅋ"));
+			//********************************************************************
 		} 
 		catch (IOException | ParseException e) {
 			e.printStackTrace();
 		}
+		
+		return resultJSON;
 	}
 }
