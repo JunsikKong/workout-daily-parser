@@ -12,8 +12,8 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-public class WorkoutMetaEditor {
-	public static final List<String> BASE_PART = new ArrayList<>(Arrays.asList("하체", "등", "가슴", "어깨", "이두", "삼두", "코어", "복근"));
+public class WorkoutBaseEditor {
+	public static final List<String> LIST_BASE_PART = new ArrayList<>(Arrays.asList("하체", "등", "가슴", "어깨", "이두", "삼두", "코어", "복근"));
 	
 	public static void main(String[] args) {
 		String csvfile_path = System.getProperty("user.dir") + "\\csvfile.csv";
@@ -38,7 +38,7 @@ public class WorkoutMetaEditor {
 				String[] lineArr = line.split(",");
 				
 				System.out.print("입력 : " + Arrays.toString(lineArr));
-				if(BASE_PART.contains(lineArr[0])) {
+				if(LIST_BASE_PART.contains(lineArr[0])) {
 					aLine = Arrays.asList(lineArr);
 					csvList.add(aLine);
 					System.out.println(" ... 성공");
@@ -72,14 +72,14 @@ public class WorkoutMetaEditor {
 		JSONObject jsonFinal = new JSONObject();
 		List<JSONArray> jsonArrList = new ArrayList<JSONArray>();
 		
-		for(String base : BASE_PART) {
+		for(String base : LIST_BASE_PART) {
 			jsonArrList.add(new JSONArray());
 			jsonFinal.put(base, jsonArrList.get(jsonArrList.size() - 1));
 		}
 		
 		for(List<String> ls : csvList) {
 			System.out.println(" ... 출력 : " + ls.get(0));
-			int __idx = BASE_PART.indexOf(ls.get(0));
+			int __idx = LIST_BASE_PART.indexOf(ls.get(0));
 			JSONObject jsonTemp = new JSONObject();
 			JSONArray jsonArrTemp = new JSONArray();
 			
@@ -92,8 +92,8 @@ public class WorkoutMetaEditor {
 			
 		}
 		
-		for(int i = 0; i < BASE_PART.size(); i ++) {
-			jsonFinal.put(BASE_PART.get(i), jsonArrList.get(i));
+		for(int i = 0; i < LIST_BASE_PART.size(); i ++) {
+			jsonFinal.put(LIST_BASE_PART.get(i), jsonArrList.get(i));
 		}
 		
 		System.out.println(jsonFinal.toJSONString());
