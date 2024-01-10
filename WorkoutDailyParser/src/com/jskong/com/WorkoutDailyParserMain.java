@@ -245,17 +245,23 @@ public class WorkoutDailyParserMain {
             		
             		String[] arrValue = line.split(REG_VALUE);
             		
+            		// 임시로 저장될 변수
+            		String tmpRest = "";
+            		String tmpReps = "";
+            		String tmpWeight = "";
+            		String tmpPrev = "";
+            		
+            		// 1개 단위 : 1셋, 괄호 안의 구간 반복값(어센딩/디센딩) 
+            		ArrayList<String> tmpBracketWeight = new ArrayList<String>();
+            		ArrayList<String> tmpBracketReps = new ArrayList<String>();
+            		
+            		// fin list에 저장 될 최종 변수
             		String strRest = "";
             		String strReps = "";
             		String strWeight = "";
             		
-            		boolean isRest = false;
-            		boolean isInBracket = false;
-            		
-            		String tmpPrev = "";
-            		ArrayList<String> tmpWeight = new ArrayList<String>();
-            		ArrayList<String> tmpReps = new ArrayList<String>();
-            		
+            		boolean isRest = false; // true 일 경우 다음 값은 휴식 값
+            		boolean isInBracket = false; // true 일 경우 tmpBracket리스트에도 값 추가 add
             		
             		for (String str : arrValue) {
             			System.out.println("VALUE :: " + str); 
@@ -267,8 +273,8 @@ public class WorkoutDailyParserMain {
             				try {
             					int numBackValue = Integer.parseInt(backValue);
             					for(int i = 0; i < numBackValue; i++) {
-            						strReps += frontValue + " ";
-            						strWeight += frontValue + " ";
+            						tmpReps += frontValue + " ";
+            						tmpWeight += frontValue + " ";
             					}
             				}
             				catch (NumberFormatException ex) {
@@ -278,11 +284,11 @@ public class WorkoutDailyParserMain {
             			
             			if(str.equals("-")) {
             				if (tmpPrev.matches("[0-9.가-힣]+")) {
-            					strWeight = tmpPrev;
-            					System.out.println("[5] WEIGHT :: " + strWeight);
+            					tmpWeight = tmpPrev;
+            					System.out.println("[5] WEIGHT :: " + tmpWeight);
             				}
             				else {
-            					strWeight = "[숫자X]";
+            					tmpWeight = "[숫자X]";
             					System.out.println("### 경고 : 중량이 숫자가 아님");
             				}
             				continue;
@@ -296,11 +302,11 @@ public class WorkoutDailyParserMain {
             			if(isRest) {
             				//...숫자인지확인
             				if (str.matches("[0-9]+")) {
-            					strRest = str;
-            					System.out.println("[4] REST   :: " + strRest);
+            					tmpRest = str;
+            					System.out.println("[4] REST   :: " + tmpRest);
             				}
             				else {
-            					strRest = "[숫자X]";
+            					tmpRest = "[숫자X]";
             					System.out.println("### 경고 : 휴식시간이 숫자가 아님");
             				}
             				isRest = false;
@@ -310,23 +316,23 @@ public class WorkoutDailyParserMain {
             			if(str.equals("*")) {
             				if (tmpPrev.matches("[0-9]+")) {
             					// strPrev int 변환 후 for 반복으로 배열 삽입
-            					strWeight = tmpPrev;
-            					System.out.println("[5] WEIGHT :: " + strWeight);
+            					//strWeight = tmpPrev;
+            					//System.out.println("[5] WEIGHT :: " + strWeight);
             				}
             				else if (tmpPrev.matches(")")) {
             					
             				}
             				else {
-            					strWeight = "[숫자X]";
-            					System.out.println("### 경고 : 중량이 숫자가 아님");
+            					//strWeight = "[숫자X]";
+            					//System.out.println("### 경고 : 중량이 숫자가 아님");
             				}
             				continue;
             			}
             			
             			if(str.equals("(")) {
             				isInBracket = true;
-            				tmpWeight.clear();
-            				tmpReps.clear();
+            				tmpBracketWeight.clear();
+            				tmpBracketReps.clear();
             				continue;
             			}
             			
@@ -337,13 +343,14 @@ public class WorkoutDailyParserMain {
             			
             			
             			//****************main
-            			
+            			tmpReps = "";
+            			tmpWeight = "";
 
             			tmpPrev = str;
             		}
             		
             		// fin 리스트에 추가
-            		finRest.add(strRest);
+            		finRest.add(tmpRest);
 
             		// 3.4. 운동NAME-휴식 ▶ 배열 적재 (없을 경우 c/s 고려)
             		/*
