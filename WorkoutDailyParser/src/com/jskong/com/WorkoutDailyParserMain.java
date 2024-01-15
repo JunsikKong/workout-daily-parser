@@ -19,11 +19,20 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class WorkoutDailyParserMain {
+	/* 상수 */
+	public static final String CONST_CURRENT_YEAR = "2023";
+	
+	/* 경로 */
 	public static final String PATH_IN_TXT = System.getProperty("user.dir") + "\\textfile.txt";
 	public static final String PATH_BASE_JSON = System.getProperty("user.dir") + "\\jsonfile.json";
 	public static final String PATH_OUT_JSON = System.getProperty("user.dir") + "\\out.json";
 	
-	public static final String VAR_CURRENT_YEAR = "2023";
+	/* 구분자 */
+	public static final String DELIMITER_WORKOUT = "─";
+	public static final String DELIMITER_BRACKET = "│";
+	public static final String DELIMITER_WORKSET = "┌";
+	
+	/* 정규식 */
 	public static final String REG_DATE8 = "(19|20)([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_DATE4 = "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])";
 	public static final String REG_NAME_PATTERN = "([가-힣ㄱ-ㅎ]+)(?![가-힣ㄱ-ㅎ]*-)";
@@ -69,14 +78,16 @@ public class WorkoutDailyParserMain {
 	 * ㅅㄹㄹ
 	 * w2 20-10 26-10*4
 	 * 10-15*5/60
+	 * ㅂㄹㄹ 누워서
+	 * (6-20 10-15 14-10)*4/30
 	 *
 	 * <OUT>
-	 * title :	["ㅅㄹㄹ", "ㅁㅍ;ㅅㄹㄹ"]
-	 * part :	["어깨", "어깨;어깨"]
-	 * rest :	["0", "60"]
-	 * option :	["" , ""]
-	 * reps :	["100", "w w 10 10 10 10 10;15 15 15 15 15"]
-	 * weight :	["3", "0 0 20 26 26 26 26;10 10 10 10 10"]
+	 * title :	["ㅅㄹㄹ", "ㅁㅍ;ㅅㄹㄹ", "ㅂㄹㄹ"]
+	 * part :	["어깨", "어깨;어깨", "어깨"]
+	 * rest :	["0", "60", "30"]
+	 * option :	["", "", "누워서"]
+	 * reps :	["100", "w2 10 10 10 10 10;15 15 15 15 15", "6~10~14 6~10~14 6~10~14 6~10~14"]
+	 * weight :	["3", "w2 20 26 26 26 26;10 10 10 10 10"  , "20~15~10 20~15~10 20~15~10 20~15~10"]
 	 * 
 	 * 
 	 * < Json Structure >
@@ -130,11 +141,10 @@ public class WorkoutDailyParserMain {
             for (String line : lines) {
             	// 0. 데이터 전처리
             	line = line.trim(); 						// line 양 옆의 공백 제거
-            	line = line.replaceAll("\\s*-\\s*", "-"); 	// '-' 양 옆의 공백 제거
-            	if ("".equals(line)) { continue; } 			// 공백 ▶ PASS
-            	System.out.println("● INPUT :: " + line);
+            	if (line.equals("")) { continue; } 			// 공백 ▶ PASS
+            	System.out.println("● 입력 :: " + line);
             	
-            	// 1. DATE
+            	/* 1. DATE *****************************************************************************************************/
             	if ("".equals(finDate)) {
             		System.out.println("▶▶▶ 1. DATE");
             		if (line.matches(REG_DATE8)) {
@@ -142,7 +152,7 @@ public class WorkoutDailyParserMain {
             			System.out.println("▶▶▶ DATE ... OK\n");
             		}
             		else if (line.matches(REG_DATE4)) {
-            			finDate = VAR_CURRENT_YEAR + line;
+            			finDate = CONST_CURRENT_YEAR + line;
             			System.out.println("▶▶▶ DATE ... OK\n");
             		}
             		else {
@@ -151,7 +161,7 @@ public class WorkoutDailyParserMain {
             		continue;
             	}
 
-            	// 2. NAME
+            	/* 2. NAME *****************************************************************************************************/
             	if (patternName.matcher(line).find()) {
             		System.out.println("▶▶▶ 2. NAME");
             		
@@ -164,12 +174,11 @@ public class WorkoutDailyParserMain {
             		// 2.1. 추출
             		for (String str : arrName) {
             			str = str.trim();
-            			if(str.equals("")) { continue; }
+            			if(str.equals("")) { continue; } // pass
             			if(tmpTitle.equals("")) { tmpTitle = str; }
             			else { strOption += str.replace("*", ""); }
             		}
             		
-            		strTitle = tmpTitle;
             		if(tmpTitle.matches(REG_TITLE)) {
             			for(String base : WorkoutBaseEditor.LIST_BASE_PART) {
             				JSONArray tempJSONArray = (JSONArray)baseJSON.get(base);
@@ -188,10 +197,31 @@ public class WorkoutDailyParserMain {
             			}
             			if(strTitle.equals("")) {
             				System.out.println("▶ E21 : 초성이지만 매핑되지 않음");
+            				strTitle = tmpTitle;
+            				strPart = "[X]";
             			}
             		}
             		else {
-            			System.out.println("▶ E22 : 초성이 아님");
+            			for(String base : WorkoutBaseEditor.LIST_BASE_PART) {
+            				JSONArray tempJSONArray = (JSONArray)baseJSON.get(base);
+            				for(int i = 0; i < tempJSONArray.size(); i++) {
+            					JSONObject tempJSONObject = (JSONObject)tempJSONArray.get(i);
+            					Iterator iter =  tempJSONObject.values().iterator();
+    							String strValue = (String)iter.next();
+    							if(strValue.equals(tmpTitle)) {
+    								System.out.println("▶ E22 : 초성이 아닌데 매핑됨");
+    								strTitle = tmpTitle;
+    								strPart = base;
+    								break;
+    							}
+            				}
+            				if(!strTitle.equals("")) { break; }
+            			}
+            			if(strTitle.equals("")) {
+            				System.out.println("▶ E23 : 초성도 아닌데 매핑되지도 않음");
+            				strTitle = tmpTitle;
+            				strPart = "[X]";
+            			}
             		}
             		
             		System.out.println("[1] TITLE  :: " + strTitle);
@@ -201,12 +231,9 @@ public class WorkoutDailyParserMain {
             		// 리스트 적재
             		if(cntName > cntValue) {
             			int lastIndex = finTitle.size() - 1;
-            			String lastTitle = finTitle.get(lastIndex);
-            			String lastOption = finOption.get(lastIndex);
-            			String lastPart = finPart.get(lastIndex);
-            			finTitle.set(lastIndex, lastTitle + ";" + strTitle);
-            			finOption.set(lastIndex, lastOption + ";" + strOption);
-            			finPart.set(lastIndex, lastPart + ";" + strPart);
+            			finTitle.set(lastIndex, finTitle.get(lastIndex) + DELIMITER_WORKOUT + strTitle);
+            			finOption.set(lastIndex, finOption.get(lastIndex) + DELIMITER_WORKOUT + strOption);
+            			finPart.set(lastIndex, finPart.get(lastIndex) + DELIMITER_WORKOUT + strPart);
             		}
             		else {
             			finTitle.add(strTitle);
@@ -217,7 +244,7 @@ public class WorkoutDailyParserMain {
             		cntName++;
             		System.out.println("");
             	}
-            	// 3. VALUE
+            	/* 3. VALUE *****************************************************************************************************/
             	else {
             		if(cntName <= cntValue) {
             			System.out.println("▶ E31 : NAME 형식에 맞지 않음.");
@@ -237,11 +264,11 @@ public class WorkoutDailyParserMain {
             		String tmpRest = "";
             		String tmpReps = "";
             		String tmpWeight = "";
-            		String tmpPrev = "";
+            		String prevValue = "";
             		
             		// 1개 단위 : 1셋, 괄호 안의 구간 반복값(어센딩/디센딩) 
-            		ArrayList<String> tmpBracketWeight = new ArrayList<String>();
-            		ArrayList<String> tmpBracketReps = new ArrayList<String>();
+            		String tmpBracketWeight = "";
+            		String tmpBracketReps = "";
             		
             		// fin list에 저장 될 최종 변수
             		String strRest = "";
@@ -249,51 +276,52 @@ public class WorkoutDailyParserMain {
             		String strWeight = "";
             		
             		boolean isRest = false; // true 일 경우 다음 값은 휴식 값
-            		boolean isInBracket = false; // true 일 경우 tmpBracket리스트에도 값 추가 add
+            		boolean isLoop = false; // true 일 경우 다음 값은 휴식 값
+            		boolean isInBracket = false; // true 일 경우 tmpBracket 리스트에도 값 추가
             		
             		for (String str : arrValue) {
             			System.out.println("VALUE :: " + str); 
             			
-            			// w/d
+            			// [ w d ] : 워밍업 / 드랍세트
             			if(str.matches(REG_WARM_AND_DROP)) {
             				String frontValue = str.substring(0, 1);
-            				String backValue  = str.substring(1);
-            				if(backValue.equals("")) { backValue = "1"; }
+            				String otherValue  = str.substring(1);
+            				if(otherValue.equals("")) { otherValue = "1"; }
             				try {
-            					int numBackValue = Integer.parseInt(backValue);
+            					int numBackValue = Integer.parseInt(otherValue);
             					for(int i = 0; i < numBackValue; i++) {
-            						tmpReps += frontValue + " ";
-            						tmpWeight += frontValue + " ";
+            						tmpReps += DELIMITER_BRACKET + frontValue;
+            						tmpWeight += DELIMITER_BRACKET + frontValue;
             					}
+            					tmpReps = tmpReps.substring(1);
+            					tmpWeight = tmpWeight.substring(1); 
             				}
             				catch (NumberFormatException ex) {
             					ex.printStackTrace();
             				}
             			}
             			
-            			// - (weight)
-            			if(str.equals("-")) {
-            				if (tmpPrev.matches("[0-9.가-힣]+")) {
-            					tmpWeight = tmpPrev;
-            					System.out.println("[5] WEIGHT :: " + tmpWeight);
+            			// [ 숫자 ] : 횟수
+            			if(str.matches("[0-9]+")) {
+            				if(prevValue.equals("")) { // 이전값이 없을 때 ▶ 처음일 때
+            					continue;
             				}
-            				else {
-            					tmpWeight = "[숫자X]";
-            					System.out.println("▶ E31 : 중량이 숫자가 아님");
+            				if(prevValue.matches("[0-9]+")) { 
+            					
             				}
-            				continue;
+            				
             			}
             			
-            			// / (rest)
+            			
+            			// [ / ] : 휴식
             			if(str.equals("/")) {
             				isRest = true;
             				continue;
             			}
-            			
             			if(isRest) {
             				//...숫자인지확인
             				if (str.matches("[0-9]+")) {
-            					tmpRest += str + ";";
+            					tmpRest += DELIMITER_WORKOUT + str;
             					System.out.println("[4] REST   :: " + tmpRest);
             				}
             				else {
@@ -304,32 +332,63 @@ public class WorkoutDailyParserMain {
             				continue;
             			}
             			
-            			// * (loop)
+            			// [ * ] : 구간반복
             			if(str.equals("*")) {
-            				if (tmpPrev.matches("[0-9]+")) {
-            					// strPrev int 변환 후 for 반복으로 배열 삽입
-            					//strWeight = tmpPrev;
-            					//System.out.println("[5] WEIGHT :: " + strWeight);
-            				}
-            				else if (tmpPrev.matches(")")) {
-            					
+            				isLoop = true;
+            				continue;
+            			}
+            			if(isLoop) {
+            				if (str.matches("[0-9]+")) {
+            					if(prevValue.matches("[0-9]+")) {
+            						try {
+                    					int __num = Integer.parseInt(prevValue);
+                    					for(int i = 0; i < __num; i++) {
+                    						tmpReps += DELIMITER_WORKSET + tmpReps;
+                    						tmpWeight += DELIMITER_WORKSET + tmpWeight;
+                    					}
+                    				}
+                    				catch (NumberFormatException ex) {
+                    					ex.printStackTrace();
+                    				}
+            					}
+            					else if(prevValue.equals(")")) {
+            						
+            					}
+            					else {
+                					System.out.println("▶ E31 : 반복하려는 대상이 없음");
+            					}
             				}
             				else {
-            					//strWeight = "[숫자X]";
-            					//System.out.println("### 경고 : 중량이 숫자가 아님");
+            					System.out.println("▶ E32 : 반복 다음 숫자가 아님");
+            				}
+
+            				isLoop = false;
+            				continue;
+            			}
+            			
+            			
+            			// [ - ] : 중량
+            			if(str.equals("-")) {
+            				if (prevValue.matches("[0-9.가-힣]+")) {
+            					tmpWeight = prevValue;
+            					System.out.println("[5] WEIGHT :: " + tmpWeight);
+            				}
+            				else {
+            					tmpWeight = "[숫자X]";
+            					System.out.println("▶ E31 : 중량이 숫자가 아님");
             				}
             				continue;
             			}
             			
-            			// ( (Bracket Start)
+            			// [ ( ] : 어센딩/디센딩 시작
             			if(str.equals("(")) {
             				isInBracket = true;
-            				tmpBracketWeight.clear();
-            				tmpBracketReps.clear();
+            				tmpBracketWeight = "";
+            				tmpBracketReps = "";
             				continue;
             			}
             			
-            			// ) (Bracket End)
+            			// [ ) ] : 어센딩/디센딩 종료
             			if(str.equals(")")) {
             				isInBracket = false;
                 			continue;
@@ -340,7 +399,7 @@ public class WorkoutDailyParserMain {
             			tmpReps = "";
             			tmpWeight = "";
 
-            			tmpPrev = str;
+            			prevValue = str;
             		}
             		
             		// fin 리스트에 추가
