@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 public class WorkoutDailyParserMain {
 	/* 상수 */
 	public static final String CONST_CURRENT_YEAR = "2023";
+	public static final String CONST_NULL = "xxx";
 	
 	/* 경로 */
 	public static final String PATH_IN_TXT = System.getProperty("user.dir") + "\\textfile.txt";
@@ -39,6 +40,15 @@ public class WorkoutDailyParserMain {
 	public static final String REG_TITLE = "[ㄱ-ㅎ]+";
 	public static final String REG_VALUE = "[^wdf0-9.가-힣ㄱ-ㅎ-\\/\\*\\(\\)]+";
 	public static final String REG_WARM_AND_DROP = "w[0-9]*|d[0-9]*";
+	
+	/* 최종값 */
+	private static String            FIN_DATE   = "";
+	private static ArrayList<String> FIN_TITLE  = new ArrayList<String>();
+	private static ArrayList<String> FIN_PART   = new ArrayList<String>();
+	private static ArrayList<String> FIN_REST   = new ArrayList<String>();
+	private static ArrayList<String> FIN_OPTION = new ArrayList<String>();
+	private static ArrayList<String> FIN_REPS   = new ArrayList<String>();
+	private static ArrayList<String> FIN_WEIGHT = new ArrayList<String>();
 	
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("user.dir"));
@@ -93,13 +103,13 @@ public class WorkoutDailyParserMain {
 	 * < Json Structure >
 	 * ├ DATE (DATE)
 	 * └ WORK (ARRAY)
-	 *   ├ WORK_SEQ (INTEGER)	◀ AUTO SET
+	 *   ├ WORK_SEQ (INTEGER)	◀ *AUTO SET
 	 *   ├ WORK_TITLE (STRING)	◀ CONVERT FROM BASEDATA
 	 *   ├ WORK_PART (STRING)	◀ GET FROM BASEDATA
 	 *   ├ WORK_REST (INTEGER)	◀ GET FROM WORK_VALUE
 	 *   ├ WORK_OPTION (STRING)	
 	 *   └ WORK_SET (ARRAY)
-	 *     ├ SET_SEQ (INTEGER)	◀ AUTO SET
+	 *     ├ SET_SEQ (INTEGER)	◀ *AUTO SET
 	 *     ├ SET_WEIGHT (STRING)
 	 *     └ SET_REPS (INTEGER)
 	 * 
@@ -120,15 +130,6 @@ public class WorkoutDailyParserMain {
 	public static JSONObject getJSONWorkout(String inputData) {
 		JSONObject baseJSON = getJSONBase();
 
-        String finDate = "";
-        // 리스트 1개의 단위 = 운동 1셋트 (컴파운드의 경우 묶어서 ; 로 구분)
-        ArrayList<String> finTitle = new ArrayList<String>();
-        ArrayList<String> finPart = new ArrayList<String>();
-        ArrayList<String> finRest = new ArrayList<String>();
-        ArrayList<String> finOption = new ArrayList<String>();
-        ArrayList<String> finReps = new ArrayList<String>();
-        ArrayList<String> finWeight = new ArrayList<String>();
-        
         int cntName = 0;
         int cntValue = 0;
 
@@ -143,14 +144,14 @@ public class WorkoutDailyParserMain {
             	Log.debug("▶line :: " + line);
             	
             	/* 1. DATE *****************************************************************************************************/
-            	if (finDate.equals("")) {
+            	if (FIN_DATE.equals("")) {
             		Log.debug("▶date 시작");
             		if (line.matches(REG_DATE8)) {
-            			finDate = line;
+            			FIN_DATE = line;
             			Log.info("▶▶date 성공 8자리");
             		}
             		else if (line.matches(REG_DATE4)) {
-            			finDate = CONST_CURRENT_YEAR + line;
+            			FIN_DATE = CONST_CURRENT_YEAR + line;
             			Log.info("▶▶date 성공 4자리");
             		}
             		else {
@@ -196,7 +197,7 @@ public class WorkoutDailyParserMain {
             			if(strTitle.equals("")) {
             				Log.error("▶▶name 실패, 초성이지만 매핑되지 않음");
             				strTitle = tmpTitle;
-            				strPart = "[X]";
+            				strPart = CONST_NULL;
             			}
             		}
             		else {
@@ -218,7 +219,7 @@ public class WorkoutDailyParserMain {
             			if(strTitle.equals("")) {
             				Log.error("▶▶name 실패, 초성도 아닌데 매핑되지도 않음");
             				strTitle = tmpTitle;
-            				strPart = "[X]";
+            				strPart = CONST_NULL;
             			}
             		}
             		
@@ -228,15 +229,15 @@ public class WorkoutDailyParserMain {
             		
             		// 리스트 적재
             		if(cntName > cntValue) {
-            			int lastIndex = finTitle.size() - 1;
-            			finTitle.set(lastIndex, finTitle.get(lastIndex) + DELIMITER_WORKOUT + strTitle);
-            			finOption.set(lastIndex, finOption.get(lastIndex) + DELIMITER_WORKOUT + strOption);
-            			finPart.set(lastIndex, finPart.get(lastIndex) + DELIMITER_WORKOUT + strPart);
+            			int lastIndex = FIN_TITLE.size() - 1;
+            			FIN_TITLE.set(lastIndex, FIN_TITLE.get(lastIndex) + DELIMITER_WORKOUT + strTitle);
+            			FIN_OPTION.set(lastIndex, FIN_OPTION.get(lastIndex) + DELIMITER_WORKOUT + strOption);
+            			FIN_PART.set(lastIndex, FIN_PART.get(lastIndex) + DELIMITER_WORKOUT + strPart);
             		}
             		else {
-            			finTitle.add(strTitle);
-            			finOption.add(strOption);
-            			finPart.add(strPart);
+            			FIN_TITLE.add(strTitle);
+            			FIN_OPTION.add(strOption);
+            			FIN_PART.add(strPart);
             		}
 
             		cntName++;
@@ -432,7 +433,7 @@ public class WorkoutDailyParserMain {
             		}
             		
             		// fin 리스트에 추가
-            		finRest.add(tmpRest);
+            		FIN_REST.add(tmpRest);
 
             		// 3.4. 운동NAME-휴식 ▶ 배열 적재 (없을 경우 c/s 고려)
             		/*
@@ -483,7 +484,7 @@ public class WorkoutDailyParserMain {
         int sets = 3; // 변경
 
         JSONArray jsonArrTemp1 = new JSONArray();
-        jsonFinal.put("DATE", finDate);
+        jsonFinal.put("DATE", FIN_DATE);
         for(int i = 0; i < works; i++) {
         	JSONObject jsonTemp1 = new JSONObject();
         	JSONArray jsonArrTemp2 = new JSONArray();
