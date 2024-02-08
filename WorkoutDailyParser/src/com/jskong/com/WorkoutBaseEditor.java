@@ -12,6 +12,21 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+
+
+
+
+/**
+ * 
+ * {
+ * "하체": [{"ㅅㅋㅌ":"스쿼트"}, {"ㄹㅇ":"레그익스텐션"}],
+ * "가슴": [{"ㅍㄹㅂㅊㅍㄹㅅ":"플랫벤치프레스"}, {"ㄷㅂㅍㅇㅂ":"덤벨풀오버"}],
+ * "등": [{"ㅍㅇ":"풀업"}, {"ㄹㅍㄷㅇ":"랫풀다운"}],
+ * "이두": [{"ㅍㄹㅊㅋ":"프리쳐컬"}, {"ㅂㅂㅋ":"바벨컬"}]
+ * }
+ * 
+ * 
+ */
 public class WorkoutBaseEditor {
 	public static final List<String> LIST_BASE_PART = new ArrayList<>(Arrays.asList("하체", "등", "가슴", "어깨", "이두", "삼두", "코어", "복근"));
 	
